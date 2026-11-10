@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 상반기 지점 성과 대시보드</title>
+    <style>
+        /* Base Reset & Design Tokens */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans KR", sans-serif;
+        }
+
+        :root {
+            --bg-main: #f7f8f3;
+            --bg-card: #ffffff;
+            --brand-gold: #F4BE38;
+            --brand-yellow: #EDDA5E;
+            --brand-olive: #71951E;
+            --brand-deep: #587529;
+            --brand-dark: #2A3B12;
+            --text-main: #2b331f;
+            --text-muted: #626d55;
+            --border-color: #e2e6d8;
+            --red-alert: #d93838;
+            --red-bg: #fdf2f2;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding-bottom: 40px;
+        }
+
+        /* Layout Container */
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+
+        /* Header */
+        header {
+            background-color: var(--brand-dark);
+            color: white;
+            border-bottom: 4px solid var(--brand-gold);
+            padding: 16px 0;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-title-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .header-badge {
+            background-color: var(--brand-gold);
+            color: var(--brand-dark);
+            font-size: 11px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        .header-subtitle {
+            color: #d1dbbd;
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        /* Card Grid */
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        @media (min-width: 640px) { .grid-4 { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 1024px) { .grid-4 { grid-template-columns: repeat(4, 1fr); } }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        .kpi-card.highlight {
+            border-top: 4px solid var(--brand-gold);
+            background: linear-gradient(180deg, #fffdf5 0%, #ffffff 100%);
+        }
+        .kpi-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .kpi-value {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--brand-dark);
+        }
+        .kpi-sub {
+            font-size: 12px;
+            margin-top: 6px;
+            color: var(--text-muted);
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .badge-gold { background: #fef4d8; color: #a3770d; }
+        .badge-green { background: #eef5e2; color: #435e16; }
+        .badge-red { background: #fde8e8; color: var(--red-alert); }
+
+        /* Chart Grid */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        @media (min-width: 1024px) { .grid-2 { grid-template-columns: 3fr 2fr; } }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--brand-dark);
+        }
+
+        /* Custom SVG Bar Chart */
+        .bar-chart-container {
+            width: 100%;
+            height: 260px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            padding-top: 30px;
+            padding-bottom: 30px;
+            border-bottom: 2px solid var(--border-color);
+            position: relative;
+        }
+        .bar-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+            justify-content: flex-end;
+            width: 20%;
+            position: relative;
+        }
+        .bar-value {
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: var(--brand-dark);
+        }
+        .bar {
+            width: 60%;
+            max-width: 50px;
+            border-radius: 6px 6px 0 0;
+            transition: height 0.5s ease;
+        }
+        .bar-label {
+            position: absolute;
+            bottom: -25px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        /* Custom Donut Chart & Legend */
+        .donut-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+        @media (min-width: 640px) {
+            .donut-wrapper { flex-direction: row; justify-content: space-around; }
+        }
+        .donut-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+            max-width: 200px;
+        }
+        .legend-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        /* Table Styling */
+        .table-responsive {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 13px;
+        }
+        th {
+            background-color: #f2f4eb;
+            color: var(--brand-dark);
+            padding: 10px 14px;
+            font-weight: 700;
+            border-bottom: 2px solid var(--border-color);
+        }
+        td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+        tr:hover {
+            background-color: #fbfcf8;
+        }
+
+        /* Underperforming Section */
+        .alert-card {
+            background-color: var(--red-bg);
+            border: 1px solid #f8b4b4;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 24px;
+        }
+        .alert-title {
+            color: var(--red-alert);
+            font-weight: 800;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        .text-red-bold {
+            color: var(--red-alert);
+            font-weight: 800;
+        }
+        
+        /* Filter Box */
+        .filter-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+        .search-input, .select-input {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+        }
+        .search-input:focus, .select-input:focus {
+            border-color: var(--brand-olive);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="container header-content">
+            <div class="header-title-box">
+                <div>
+                    <h1 style="font-size: 20px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                        📊 2026 상반기 지점 성과 대시보드
+                        <span class="header-badge">실수치 검증 완료</span>
+                    </h1>
+                    <div class="header-subtitle">실습1_성과급 시트 기반 경영 보고 데이터 (단일 독립 실행 가능 버전)</div>
+                </div>
+            </div>
+            <div style="font-size: 12px; opacity: 0.8; text-align: right;">
+                보고서 작성일: 2026.11.10<br>기준: 상반기 전체 20개 지점
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- 4 KPI Cards -->
+        <div class="grid-4">
+            <div class="kpi-card highlight">
+                <div class="kpi-label">전체 총 실적</div>
+                <div class="kpi-value">14.70억 원</div>
+                <div class="kpi-sub">목표(14.27억) 대비 <span class="badge badge-gold">103.0%</span></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">지점 평균 달성률</div>
+                <div class="kpi-value">100.3%</div>
+                <div class="kpi-sub">전체 20개 지점 평균 <span class="badge badge-green">목표 달성</span></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">목표 달성 지점 수</div>
+                <div class="kpi-value">14개 지점</div>
+                <div class="kpi-sub">달성률 100% 이상 <span class="badge badge-green">전체 70%</span></div>
+            </div>
+            <div class="kpi-card highlight">
+                <div class="kpi-label">실적 1위 지점</div>
+                <div class="kpi-value">순천지점</div>
+                <div class="kpi-sub">달성률 <span class="badge badge-gold">164.2%</span> (9,850만원)</div>
+            </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="grid-2">
+            <!-- Regional Bar Chart -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">📍 지역별 총 실적 비교 (최상위 강조)</div>
+                    <span style="font-size: 12px; color: var(--text-muted);">단위: 만 원</span>
+                </div>
+                <div class="bar-chart-container">
+                    <div class="bar-group">
+                        <div class="bar-value">62,050</div>
+                        <div class="bar" style="height: 100%; background-color: var(--brand-gold);" title="수도권 (1위 강조)"></div>
+                        <div class="bar-label">수도권 ⭐</div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar-value">33,600</div>
+                        <div class="bar" style="height: 54%; background-color: var(--brand-yellow);"></div>
+                        <div class="bar-label">영남권</div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar-value">28,025</div>
+                        <div class="bar" style="height: 45%; background-color: var(--brand-yellow);"></div>
+                        <div class="bar-label">충청권</div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar-value">23,350</div>
+                        <div class="bar" style="height: 38%; background-color: var(--brand-yellow);"></div>
+                        <div class="bar-label">호남권</div>
+                    </div>
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 14px; text-align: center;">
+                    💡 수도권이 전체 실적의 42.2%를 차지하여 실적 1위를 기록했습니다.
+                </div>
+            </div>
+
+            <!-- Grade Donut Chart -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">🏷️ 등급별 지점 분포 (도넛)</div>
+                    <span style="font-size: 12px; color: var(--text-muted);">총 20개 지점</span>
+                </div>
+                <div class="donut-wrapper">
+                    <!-- Pure SVG Donut Chart -->
+                    <svg width="180" height="180" viewBox="0 0 42 42">
+                        <!-- S Grade (20% -> 72 deg) -->
+                        <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#F4BE38" stroke-width="6" stroke-dasharray="20 80" stroke-dashoffset="25"></circle>
+                        <!-- A Grade (50% -> 180 deg) -->
+                        <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#EDDA5E" stroke-width="6" stroke-dasharray="50 50" stroke-dashoffset="5"></circle>
+                        <!-- B Grade (20% -> 72 deg) -->
+                        <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#71951E" stroke-width="6" stroke-dasharray="20 80" stroke-dashoffset="55"></circle>
+                        <!-- C Grade (10% -> 36 deg) -->
+                        <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#587529" stroke-width="6" stroke-dasharray="10 90" stroke-dashoffset="35"></circle>
+                        <text x="21" y="22" text-anchor="middle" font-size="5" font-weight="bold" fill="#2A3B12">20개 지점</text>
+                    </svg>
+
+                    <div class="donut-legend">
+                        <div class="legend-item">
+                            <div><span class="legend-color" style="background: #F4BE38;"></span><b>S 등급</b> (120% 이상)</div>
+                            <b>4곳 (20%)</b>
+                        </div>
+                        <div class="legend-item">
+                            <div><span class="legend-color" style="background: #EDDA5E;"></span><b>A 등급</b> (100%~119%)</div>
+                            <b>10곳 (50%)</b>
+                        </div>
+                        <div class="legend-item">
+                            <div><span class="legend-color" style="background: #71951E;"></span><b>B 등급</b> (85%~99%)</div>
+                            <b>4곳 (20%)</b>
+                        </div>
+                        <div class="legend-item">
+                            <div><span class="legend-color" style="background: #587529;"></span><b>C 등급</b> (85% 미만)</div>
+                            <b>2곳 (10%)</b>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Full Table Section -->
+        <div class="card" style="margin-bottom: 24px;">
+            <div class="card-header">
+                <div class="card-title">📋 전체 20개 지점 성과 상세 현황</div>
+            </div>
+            <div class="filter-box">
+                <input type="text" id="searchInput" class="search-input" placeholder="지점명 또는 담당자 검색..." onkeyup="filterTable()">
+                <select id="regionFilter" class="select-input" onchange="filterTable()">
+                    <option value="">전체 지역</option>
+                    <option value="수도권">수도권</option>
+                    <option value="영남권">영남권</option>
+                    <option value="충청권">충청권</option>
+                    <option value="호남권">호남권</option>
+                </select>
+            </div>
+            <div class="table-responsive">
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>지점명</th>
+                            <th>담당자</th>
+                            <th>지역</th>
+                            <th>목표 (원)</th>
+                            <th>실적 (원)</th>
+                            <th>달성률</th>
+                            <th>등급</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Filled by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Underperforming Section (100% 미만 Red Highlight Table) -->
+        <div class="alert-card">
+            <div class="alert-title">
+                ⚠️ 집중 관리 대상: 목표 미달성 지점 현황 (달성률 100% 미만)
+            </div>
+            <p style="font-size: 13px; color: #7f1d1d; margin-bottom: 14px;">
+                전체 20개 지점 중 <b>6개 지점</b>이 목표를 달성하지 못했습니다. (총 미달 부족 금액: <b>-3,920만 원</b>)
+            </p>
+            <div class="table-responsive" style="background: white; border-radius: 8px; border: 1px solid #f8b4b4;">
+                <table>
+                    <thead>
+                        <tr style="background-color: #fee2e2;">
+                            <th style="color: #991b1b;">지점명</th>
+                            <th style="color: #991b1b;">담당자</th>
+                            <th style="color: #991b1b;">지역</th>
+                            <th style="color: #991b1b;">목표금액</th>
+                            <th style="color: #991b1b;">실적금액</th>
+                            <th style="color: #991b1b;">달성률</th>
+                            <th style="color: #991b1b;">부족 금액</th>
+                        </tr>
+                    </thead>
+                    <tbody id="underperformBody">
+                        <!-- Filled by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Embedded Complete Dataset & Core JS -->
+    <script>
+        const rawData = [
+            { name: "순천지점", manager: "김태호", region: "호남권", target: 60000000, actual: 98500000, rate: 164.2, grade: "S" },
+            { name: "천안지점", manager: "최유진", region: "충청권", target: 65000000, actual: 83750000, rate: 128.8, grade: "S" },
+            { name: "강남지점", manager: "이민수", region: "수도권", target: 90000000, actual: 110800000, rate: 123.1, grade: "S" },
+            { name: "수원지점", manager: "박준영", region: "수도권", target: 75000000, actual: 91500000, rate: 122.0, grade: "S" },
+            { name: "마포지점", manager: "윤서연", region: "수도권", target: 70000000, actual: 80500000, rate: 115.0, grade: "A" },
+            { name: "대전지점", manager: "임성민", region: "충청권", target: 80000000, actual: 91000000, rate: 113.8, grade: "A" },
+            { name: "광주지점", manager: "송지원", region: "호남권", target: 80000000, actual: 87000000, rate: 108.8, grade: "A" },
+            { name: "종로지점", manager: "김철수", region: "수도권", target: 80000000, actual: 86400000, rate: 108.0, grade: "A" },
+            { name: "부산지점", manager: "정다은", region: "영남권", target: 85000000, actual: 90350000, rate: 106.3, grade: "A" },
+            { name: "아산지점", manager: "한상진", region: "충청권", target: 65000000, actual: 68900000, rate: 106.0, grade: "A" },
+            { name: "영등포지점", manager: "조현우", region: "수도권", target: 85000000, actual: 88400000, rate: 104.0, grade: "A" },
+            { name: "일산지점", manager: "백승현", region: "수도권", target: 65000000, actual: 67600000, rate: 104.0, grade: "A" },
+            { name: "울산지점", manager: "황도현", region: "영남권", target: 70000000, actual: 71750000, rate: 102.5, grade: "A" },
+            { name: "포항지점", manager: "배성민", region: "영남권", target: 60000000, actual: 60100000, rate: 100.2, grade: "A" },
+            { name: "분당지점", manager: "정수진", region: "수도권", target: 75000000, actual: 72000000, rate: 96.0, grade: "B" },
+            { name: "창원지점", manager: "신미경", region: "영남권", target: 60000000, actual: 55200000, rate: 92.0, grade: "B" },
+            { name: "전주지점", manager: "권혁주", region: "호남권", target: 60000000, actual: 54200000, rate: 90.0, grade: "B" },
+            { name: "인천지점", manager: "강성훈", region: "수도권", target: 65000000, actual: 57200000, rate: 88.0, grade: "B" },
+            { name: "청주지점", manager: "안현우", region: "충청권", target: 55000000, actual: 48400000, rate: 88.0, grade: "C" },
+            { name: "대구지점", manager: "오세훈", region: "영남권", target: 80000000, actual: 68800000, rate: 86.0, grade: "C" }
+        ];
+
+        function formatNum(num) {
+            return num.toLocaleString('ko-KR');
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                const badgeClass = item.grade === 'S' ? 'badge-gold' : item.grade === 'A' ? 'badge-green' : 'badge-red';
+                tr.innerHTML = `
+                    <td><b>${item.name}</b></td>
+                    <td>${item.manager}</td>
+                    <td>${item.region}</td>
+                    <td>${formatNum(item.target)}</td>
+                    <td>${formatNum(item.actual)}</td>
+                    <td><b style="color: ${item.rate >= 100 ? '#435e16' : '#d93838'}">${item.rate.toFixed(1)}%</b></td>
+                    <td><span class="badge ${badgeClass}">${item.grade} 등급</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderUnderperformingTable() {
+            const tbody = document.getElementById('underperformBody');
+            tbody.innerHTML = '';
+            const underperformers = rawData.filter(item => item.rate < 100);
+            underperformers.forEach(item => {
+                const shortfall = item.target - item.actual;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><b>${item.name}</b></td>
+                    <td>${item.manager}</td>
+                    <td>${item.region}</td>
+                    <td>${formatNum(item.target)}</td>
+                    <td>${formatNum(item.actual)}</td>
+                    <td class="text-red-bold">${item.rate.toFixed(1)}%</td>
+                    <td class="text-red-bold">-${formatNum(shortfall)}원</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterTable() {
+            const searchVal = document.getElementById('searchInput').value.toLowerCase();
+            const regionVal = document.getElementById('regionFilter').value;
+
+            const filtered = rawData.filter(item => {
+                const matchSearch = item.name.toLowerCase().includes(searchVal) || item.manager.toLowerCase().includes(searchVal);
+                const matchRegion = !regionVal || item.region === regionVal;
+                return matchSearch && matchRegion;
+            });
+
+            renderTable(filtered);
+        }
+
+        // Initialize on load
+        window.onload = function() {
+            renderTable(rawData);
+            renderUnderperformingTable();
+        };
+    </script>
+</body>
+</html>
